@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { progressTracker } from './utils/progress-tracker';
 
 interface SnapshotOptions {
   root: string;
@@ -21,13 +22,23 @@ export function createCodebaseSnapshot(options: SnapshotOptions): void {
   // Default max file count (to prevent exceeding AI context limits)
   options.maxFileCount = options.maxFileCount || 1000;
 
-  // Get the file structure and content
-  const snapshot = generateSnapshot(root, options);
+  // Start progress tracking
+  progressTracker.start();
+  progressTracker.discoveringFiles();
 
-  // Write to output file
-  fs.writeFileSync(output, snapshot);
+  try {
+    // Get the file structure and content
+    const snapshot = generateSnapshot(root, options);
 
-  console.log(`Snapshot saved to ${output}`);
+    // Write to output file
+    fs.writeFileSync(output, snapshot);
+
+    progressTracker.complete();
+    console.log(`Snapshot saved to ${output}`);
+  } catch (error) {
+    progressTracker.error((error as Error).message);
+    throw error;
+  }
 }
 
 function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
@@ -41,6 +52,39 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
   let fileCount = 0;
   let skippedBinaryCount = 0;
   let skippedSizeCount = 0;
+
+  // First pass to count files for progress tracking
+  const countFilesInDirectory = (dir: string): number => {
+    let count = 0;
+    try {
+      const items = fs.readdirSync(dir);
+      for (const item of items) {
+        const itemPath = path.join(dir, item);
+        const relativePath = path.relative(rootDir, itemPath);
+        try {
+          const stat = fs.statSync(itemPath);
+          if (stat.isDirectory()) {
+            if (!shouldIgnorePath(item, relativePath, options.ignoreDirs)) {
+              count += countFilesInDirectory(itemPath);
+            }
+          } else if (stat.isFile()) {
+            if (!shouldIgnorePath(item, relativePath, options.ignoreFiles)) {
+              count++;
+            }
+          }
+        } catch (err) {
+          // Skip if we can't access file stats
+        }
+      }
+    } catch (err) {
+      // Skip if we can't read directory
+    }
+    return count;
+  };
+
+  // Count total files first
+  const totalFiles = countFilesInDirectory(rootDir);
+  progressTracker.setTotalFiles(Math.min(totalFiles, options.maxFileCount!));
 
   // Process directory recursively
   function processDirectory(dir: string, indent: string = ''): void {
@@ -90,9 +134,10 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
         }
         // Handle files
         else if (stat.isFile()) {
-          fileCount++;
-
           if (shouldIgnorePath(item, relativePath, options.ignoreFiles)) continue;
+
+          fileCount++;
+          progressTracker.processFile(relativePath);
 
           result += `${indent}📄 ${item}\n`;
 
@@ -100,6 +145,7 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
           if (stat.size > maxSizeBytes) {
             result += `${indent}  [File too large: ${(stat.size / 1024).toFixed(1)}KB > ${options.maxFileSizeKB}KB limit]\n\n`;
             skippedSizeCount++;
+            progressTracker.fileProcessed();
             continue;
           }
 
@@ -115,9 +161,11 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
               if (options.excludeBinary) {
                 // Just skip binary files entirely if option is set
                 skippedBinaryCount++;
+                progressTracker.fileProcessed();
                 continue;
               }
               result += `${indent}  [Binary file]\n\n`;
+              progressTracker.fileProcessed();
               continue;
             }
 
@@ -128,8 +176,10 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
               .map((line) => `${indent}  ${line}`)
               .join('\n');
             result += `\n${indent}  ---\n\n`;
+            progressTracker.fileProcessed();
           } catch (e) {
             result += `${indent}  [Error reading file: ${(e as Error).message}]\n\n`;
+            progressTracker.fileProcessed();
           }
         }
         // Handle symlinks separately
