@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import ora, { Ora } from 'ora';
 import cliProgress from 'cli-progress';
+import { version as currentVersion } from '../../package.json';
 
 export class ProgressTracker {
   private spinner: Ora;
@@ -34,7 +35,7 @@ export class ProgressTracker {
     console.log(chalk.bold.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
     console.log(
       chalk.bold.cyan(
-        `┃  ${chalk.yellow('📸 RepoSnap')} - Creating Code Snapshot ${chalk.gray('v1.1.0')}    ┃`
+        `┃  ${chalk.yellow('📸 RepoSnap')} - Creating Code Snapshot ${chalk.gray(`v${currentVersion}`)}    ┃`
       )
     );
     console.log(chalk.bold.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
