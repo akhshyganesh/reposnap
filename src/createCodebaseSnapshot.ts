@@ -7,6 +7,8 @@ interface SnapshotOptions {
   ignoreDirs: string[];
   ignoreFiles: string[];
   maxFileSizeKB?: number;
+  excludeBinary?: boolean; // Add option to completely exclude binary files
+  maxFileCount?: number; // Add option to limit total number of files
 }
 
 export function createCodebaseSnapshot(options: SnapshotOptions): void {
@@ -14,6 +16,10 @@ export function createCodebaseSnapshot(options: SnapshotOptions): void {
 
   // Set default max file size to 500KB if not specified
   options.maxFileSizeKB = options.maxFileSizeKB || 500;
+  // Default to including binary files as placeholders
+  options.excludeBinary = options.excludeBinary || false;
+  // Default max file count (to prevent exceeding AI context limits)
+  options.maxFileCount = options.maxFileCount || 1000;
 
   // Get the file structure and content
   const snapshot = generateSnapshot(root, options);
@@ -31,8 +37,22 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
   const visitedPaths = new Set<string>(); // Track visited paths to prevent recursion
   const maxSizeBytes = (options.maxFileSizeKB || 500) * 1024;
 
+  // Count total files processed
+  let fileCount = 0;
+  let skippedBinaryCount = 0;
+  let skippedSizeCount = 0;
+
   // Process directory recursively
   function processDirectory(dir: string, indent: string = ''): void {
+    // Check if we've hit the file count limit
+    if (fileCount >= options.maxFileCount!) {
+      if (fileCount === options.maxFileCount) {
+        result += `${indent}⚠️ [File count limit of ${options.maxFileCount} reached. Remaining files omitted.]\n`;
+        fileCount++; // Increment to prevent multiple warnings
+      }
+      return;
+    }
+
     // Resolve real path to handle symlinks
     const realDirPath = fs.realpathSync(dir);
     if (visitedPaths.has(realDirPath)) {
@@ -50,6 +70,11 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
     }
 
     for (const item of items) {
+      // Check file count limit again within the loop
+      if (fileCount >= options.maxFileCount!) {
+        return;
+      }
+
       const itemPath = path.join(dir, item);
       const relativePath = path.relative(rootDir, itemPath);
 
@@ -58,7 +83,6 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
 
         // Handle directories
         if (stat.isDirectory()) {
-          // Check if directory should be ignored
           if (shouldIgnorePath(item, relativePath, options.ignoreDirs)) continue;
 
           result += `${indent}📁 ${item}/\n`;
@@ -66,7 +90,8 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
         }
         // Handle files
         else if (stat.isFile()) {
-          // Check if file should be ignored
+          fileCount++;
+
           if (shouldIgnorePath(item, relativePath, options.ignoreFiles)) continue;
 
           result += `${indent}📄 ${item}\n`;
@@ -74,6 +99,7 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
           // Skip large files
           if (stat.size > maxSizeBytes) {
             result += `${indent}  [File too large: ${(stat.size / 1024).toFixed(1)}KB > ${options.maxFileSizeKB}KB limit]\n\n`;
+            skippedSizeCount++;
             continue;
           }
 
@@ -86,6 +112,11 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
             fs.closeSync(fd);
 
             if (isBinaryContent(buffer)) {
+              if (options.excludeBinary) {
+                // Just skip binary files entirely if option is set
+                skippedBinaryCount++;
+                continue;
+              }
               result += `${indent}  [Binary file]\n\n`;
               continue;
             }
@@ -113,6 +144,20 @@ function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
   }
 
   processDirectory(rootDir);
+
+  // Add summary at the end
+  result += '\n# Snapshot Summary\n';
+  result += `Total files processed: ${fileCount > options.maxFileCount! ? options.maxFileCount : fileCount}\n`;
+  if (fileCount > options.maxFileCount!) {
+    result += `Files omitted due to count limit: ${fileCount - options.maxFileCount!}\n`;
+  }
+  if (skippedBinaryCount > 0) {
+    result += `Binary files excluded: ${skippedBinaryCount}\n`;
+  }
+  if (skippedSizeCount > 0) {
+    result += `Files excluded due to size: ${skippedSizeCount}\n`;
+  }
+
   return result;
 }
 

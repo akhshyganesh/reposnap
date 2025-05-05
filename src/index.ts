@@ -7,7 +7,15 @@ import { createCodebaseSnapshot } from './createCodebaseSnapshot';
 export { createCodebaseSnapshot };
 
 // Default ignored directories and files
-const DEFAULT_IGNORED_DIRS = ['.git', 'node_modules', 'dist', 'build', '.vscode', '__pycache__'];
+const DEFAULT_IGNORED_DIRS = [
+  '.git',
+  'node_modules',
+  'dist',
+  'build',
+  '.vscode',
+  '__pycache__',
+  'coverage'
+];
 const DEFAULT_IGNORED_FILES = [
   '.DS_Store',
   '.gitignore',
@@ -19,16 +27,35 @@ const DEFAULT_IGNORED_FILES = [
   '*.pem',
   'package-lock.json',
   'yarn.lock',
-  'pnpm-lock.yaml'
+  'pnpm-lock.yaml',
+  '*.ico',
+  '*.png',
+  '*.jpg',
+  '*.jpeg',
+  '*.gif',
+  '*.svg',
+  '*.woff',
+  '*.woff2',
+  '*.ttf',
+  '*.eot',
+  '*.mp3',
+  '*.mp4',
+  '*.mov',
+  '*.bin',
+  '*.exe',
+  '*.dll'
 ];
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const options: Record<string, string | string[]> = {
+const options: Record<string, string | string[] | boolean | number> = {
   root: process.cwd(),
   output: '',
   ignoreDirs: [...DEFAULT_IGNORED_DIRS],
-  ignoreFiles: [...DEFAULT_IGNORED_FILES]
+  ignoreFiles: [...DEFAULT_IGNORED_FILES],
+  excludeBinary: false,
+  maxFileCount: 1000,
+  maxFileSizeKB: 5000
 };
 
 // Parse arguments
@@ -47,6 +74,19 @@ for (let i = 0; i < args.length; i++) {
     const files = args[i + 1].split(' ');
     options.ignoreFiles = [...DEFAULT_IGNORED_FILES, ...files];
     i++;
+  } else if (args[i] === '--exclude-binary' || args[i] === '--xb') {
+    options.excludeBinary = true;
+  } else if (args[i] === '--max-files' || args[i] === '--mf') {
+    options.maxFileCount = parseInt(args[i + 1], 10);
+    i++;
+  } else if (args[i] === '--max-size' || args[i] === '--ms') {
+    options.maxFileSizeKB = parseInt(args[i + 1], 10);
+    i++;
+  } else if (args[i] === '--ai-prep' || args[i] === '--ai') {
+    // Shortcut option for AI preparation - exclude binary files, set reasonable limits
+    options.excludeBinary = true;
+    options.maxFileCount = 300; // Conservative limit for most AI models
+    options.maxFileSizeKB = 500; // Smaller size limit to focus on code
   }
 }
 
@@ -58,14 +98,20 @@ if (!options.output) {
 
 console.log(`Generating snapshot of ${options.root}`);
 console.log(`Output will be saved to ${options.output}`);
+if (options.excludeBinary) {
+  console.log('Binary files will be excluded');
+}
 console.log('Processing...');
 
-// Pass as a single options object instead of separate parameters
+// Pass as a single options object
 createCodebaseSnapshot({
   root: options.root as string,
   output: options.output as string,
   ignoreDirs: options.ignoreDirs as string[],
-  ignoreFiles: options.ignoreFiles as string[]
+  ignoreFiles: options.ignoreFiles as string[],
+  excludeBinary: options.excludeBinary as boolean,
+  maxFileCount: options.maxFileCount as number,
+  maxFileSizeKB: options.maxFileSizeKB as number
 });
 
 console.log('Snapshot complete!');
