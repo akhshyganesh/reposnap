@@ -1,6 +1,6 @@
 {
   "name": "reposnap",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A tool to create a codebase snapshot of the current directory, with options to include/exclude files or folders.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
