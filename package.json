@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node dist/tests/test.js",
+    "test:local": "npm run build && npm i -g . && reposnap",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"**/*.{ts,json,md}\"",
     "prepare": "husky install",
