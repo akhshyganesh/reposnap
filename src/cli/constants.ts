@@ -6,7 +6,10 @@ export const DEFAULT_IGNORED_DIRS = [
   'build',
   '.vscode',
   '__pycache__',
-  'coverage'
+  'coverage',
+  'venv',
+  '.venv',
+  '.env'
 ];
 
 export const DEFAULT_IGNORED_FILES = [
@@ -18,6 +21,7 @@ export const DEFAULT_IGNORED_FILES = [
   '*.key',
   '*.crt',
   '*.pem',
+  'package.json',
   'package-lock.json',
   'yarn.lock',
   'pnpm-lock.yaml',
@@ -50,16 +54,15 @@ export const DEFAULT_CONFIG = {
 export const AI_PREP_CONFIG = {
   excludeBinary: true,
   maxFileCount: 300,
-  maxFileSizeKB: 500
+  maxFileSizeKB: 1024
 };
 
 // Known text file extensions that should never be treated as binary
-export const TEXT_FILE_EXTENSIONS = [
+export const INCLUDE_FILE_EXTENSIONS = [
   '.ts',
   '.js',
   '.jsx',
   '.tsx',
-  '.json',
   '.md',
   '.txt',
   '.html',
@@ -92,8 +95,5 @@ export const TEXT_FILE_EXTENSIONS = [
   '.rs',
   '.vue',
   '.prisma',
-  '.sql',
-  '.gitignore',
-  '.env',
-  '.editorconfig'
+  '.sql'
 ];

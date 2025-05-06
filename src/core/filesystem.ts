@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { isBinaryContent, shouldIgnorePath } from './filters';
 import { progressTracker } from '../utils/progress-tracker';
-import { TEXT_FILE_EXTENSIONS } from '../cli/constants';
+import { INCLUDE_FILE_EXTENSIONS } from '../cli/constants';
 
 export interface FileStats {
   totalFiles: number;
@@ -200,7 +200,7 @@ export function processDirectory(
 
           // Use constant for known text file types
           const fileExt = path.extname(itemPath).toLowerCase();
-          const isKnownTextFile = TEXT_FILE_EXTENSIONS.includes(fileExt);
+          const isKnownTextFile = INCLUDE_FILE_EXTENSIONS.includes(fileExt);
 
           if (!isKnownTextFile && isBinaryContent(buffer)) {
             if (options.excludeBinary) {

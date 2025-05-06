@@ -4,49 +4,10 @@ import * as path from 'path';
 import { createCodebaseSnapshot } from './core/snapshot';
 import type { SnapshotOptions } from './core/snapshot';
 import { checkLatestVersion } from './utils/version-checker';
+import { DEFAULT_IGNORED_DIRS, DEFAULT_IGNORED_FILES } from './cli/constants';
 
 // Re-export the function so it can be imported from index
 export { createCodebaseSnapshot, SnapshotOptions };
-
-// Default ignored directories and files
-const DEFAULT_IGNORED_DIRS = [
-  '.git',
-  'node_modules',
-  'dist',
-  'build',
-  '.vscode',
-  '__pycache__',
-  'coverage'
-];
-const DEFAULT_IGNORED_FILES = [
-  '.DS_Store',
-  '.gitignore',
-  '*.pyc',
-  '*.log',
-  '.env',
-  '*.key',
-  '*.crt',
-  '*.pem',
-  'package-lock.json',
-  'yarn.lock',
-  'pnpm-lock.yaml',
-  '*.ico',
-  '*.png',
-  '*.jpg',
-  '*.jpeg',
-  '*.gif',
-  '*.svg',
-  '*.woff',
-  '*.woff2',
-  '*.ttf',
-  '*.eot',
-  '*.mp3',
-  '*.mp4',
-  '*.mov',
-  '*.bin',
-  '*.exe',
-  '*.dll'
-];
 
 // Run the version check before starting the main program
 (async (): Promise<void> => {

@@ -1,4 +1,4 @@
-import { TEXT_FILE_EXTENSIONS } from '../cli/constants';
+import { INCLUDE_FILE_EXTENSIONS } from '../cli/constants';
 
 /**
  * Determines if a file or directory should be ignored based on the given patterns
@@ -41,7 +41,7 @@ export function isBinaryContent(buffer: Buffer): boolean {
     if (filePathMatch) {
       filePath = filePathMatch[1];
       // If we can determine this is a known text file type from the path, don't mark it as binary
-      if (filePath && TEXT_FILE_EXTENSIONS.some((ext) => filePath.toLowerCase().endsWith(ext))) {
+      if (filePath && INCLUDE_FILE_EXTENSIONS.some((ext) => filePath.toLowerCase().endsWith(ext))) {
         return false;
       }
     }
