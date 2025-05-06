@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { SnapshotEntry, FileStats, countFilesInDirectory, processDirectory } from './filesystem';
 import { progressTracker } from '../utils/progress-tracker';
+import { author, version, homepage } from '../../package.json';
 
 export interface SnapshotOptions {
   root: string;
@@ -63,8 +64,13 @@ function formatSnapshot(
   stats: FileStats,
   options: SnapshotOptions
 ): string {
-  let result = `# Codebase Snapshot: ${rootDirName}\n`;
-  result += `Generated: ${new Date().toISOString()}\n\n`;
+  let result = `# Code Repository Snapshot: ${path.basename(rootDirName)}\n\n`;
+  result += `--------------------------------------------\n`;
+  result += `Generated with reposnap v${version}\n`;
+  result += `Project: ${homepage}\n`;
+  result += `Author: ${author}\n`;
+  result += `Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}\n`;
+  result += `--------------------------------------------\n\n\n`;
 
   // Special function to format entries with proper indentation
   const formatEntries = (items: SnapshotEntry[]): void => {
