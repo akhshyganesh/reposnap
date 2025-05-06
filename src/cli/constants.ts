@@ -13,6 +13,7 @@ export const DEFAULT_IGNORED_DIRS = [
 ];
 
 export const DEFAULT_IGNORED_FILES = [
+  '*_snapshot.txt',
   '.DS_Store',
   '.gitignore',
   '*.pyc',
