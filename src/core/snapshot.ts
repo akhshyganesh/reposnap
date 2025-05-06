@@ -114,6 +114,9 @@ export function createCodebaseSnapshot(options: SnapshotOptions): void {
   progressTracker.start();
   progressTracker.discoveringFiles();
 
+  // Track processed files and their status
+  const processedFiles: { path: string; success: boolean }[] = [];
+
   try {
     // Count the total files to process
     const totalFiles = countFilesInDirectory(root, root, options.ignoreDirs, options.ignoreFiles);
@@ -130,14 +133,36 @@ export function createCodebaseSnapshot(options: SnapshotOptions): void {
     // Process the directory structure
     const entries = processDirectory(root, root, options, stats);
 
+    // Record processed file statuses from entries
+    entries.forEach((entry) => {
+      if (entry.type === 'file') {
+        processedFiles.push({
+          path: entry.relativePath,
+          success: !entry.error && !entry.skipped
+        });
+      }
+    });
+
     // Format the snapshot
     const snapshot = formatSnapshot(entries, path.basename(root), stats, options);
 
     // Write to output file
     fs.writeFileSync(output, snapshot);
 
+    // First complete the progress tracker
     progressTracker.complete();
-    console.log(`Snapshot saved to ${output}`);
+
+    console.log('\nFile processing details:');
+
+    // Now display all processed files with their status
+    entries.forEach((entry) => {
+      if (entry.type === 'file') {
+        const isSuccess = !entry.error && !entry.skipped;
+        console.log(`${isSuccess ? '✓' : '✗'} ${entry.relativePath}`);
+      }
+    });
+
+    console.log(`\nSnapshot saved to ${output}`);
   } catch (error) {
     progressTracker.error((error as Error).message);
     throw error;
