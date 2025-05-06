@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import * as path from 'path';
-import { createCodebaseSnapshot } from './createCodebaseSnapshot';
+import { createCodebaseSnapshot } from './core/snapshot';
+import type { SnapshotOptions } from './core/snapshot';
 import { checkLatestVersion } from './utils/version-checker';
 
 // Re-export the function so it can be imported from index
-export { createCodebaseSnapshot };
+export { createCodebaseSnapshot, SnapshotOptions };
 
 // Default ignored directories and files
 const DEFAULT_IGNORED_DIRS = [
@@ -48,7 +49,7 @@ const DEFAULT_IGNORED_FILES = [
 ];
 
 // Run the version check before starting the main program
-(async () => {
+(async (): Promise<void> => {
   await checkLatestVersion();
 
   // Parse command line arguments
