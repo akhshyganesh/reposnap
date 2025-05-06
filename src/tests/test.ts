@@ -4,12 +4,15 @@ import fs from 'fs';
 
 const testOutputFile = 'test_snapshot.txt';
 
-// Update to pass a single options object
+// Update to pass a single options object with all required properties
 createCodebaseSnapshot({
   root: path.join(__dirname, '../..'),
   output: testOutputFile,
   ignoreDirs: ['node_modules'],
-  ignoreFiles: ['*.log']
+  ignoreFiles: ['*.log'],
+  maxFileSizeKB: 500,
+  excludeBinary: false,
+  maxFileCount: 1000
 });
 
 if (fs.existsSync(testOutputFile)) {

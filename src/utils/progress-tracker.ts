@@ -32,13 +32,13 @@ export class ProgressTracker {
 
   start(): void {
     this.isActive = true;
-    console.log(chalk.bold.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
+    console.log(chalk.bold.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
     console.log(
       chalk.bold.cyan(
-        `┃  ${chalk.yellow('📸 RepoSnap')} - Creating Code Snapshot ${chalk.gray(`v${currentVersion}`)}    ┃`
+        `┃  ${chalk.yellow('📸 RepoSnap')} - Creating Snapshot ${chalk.gray(`v${currentVersion}`)}  ┃`
       )
     );
-    console.log(chalk.bold.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
+    console.log(chalk.bold.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
     this.spinner.start();
   }
 
