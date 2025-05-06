@@ -14,6 +14,12 @@ export interface SnapshotOptions {
   maxFileSizeKB: number;
   excludeBinary: boolean;
   maxFileCount: number;
+  compare?: {
+    oldSnapshot: string;
+    newSnapshot: string;
+    output?: string;
+    showContent: boolean;
+  };
 }
 
 export function parseCommandLineArgs(args: string[]): SnapshotOptions {
@@ -60,6 +66,29 @@ export function parseCommandLineArgs(args: string[]): SnapshotOptions {
       case '--ai-prep':
       case '--ai':
         Object.assign(options, AI_PREP_CONFIG);
+        break;
+      case '--compare':
+      case '--diff':
+        if (i + 2 < args.length) {
+          options.compare = {
+            oldSnapshot: args[++i],
+            newSnapshot: args[++i]
+          };
+        } else {
+          console.error('Error: --compare requires two snapshot files');
+          process.exit(1);
+        }
+        break;
+      case '--compare-output':
+      case '--co':
+        if (options.compare && i + 1 < args.length) {
+          options.compare.output = args[++i];
+        }
+        break;
+      case '--show-content':
+        if (options.compare) {
+          options.compare.showContent = true;
+        }
         break;
     }
   }
