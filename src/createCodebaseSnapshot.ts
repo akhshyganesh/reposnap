@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { progressTracker } from './utils/progress-tracker';
+import { author, version, homepage } from '../package.json';
 
 interface SnapshotOptions {
   root: string;
@@ -42,8 +43,13 @@ export function createCodebaseSnapshot(options: SnapshotOptions): void {
 }
 
 function generateSnapshot(rootDir: string, options: SnapshotOptions): string {
-  let result = `# Codebase Snapshot: ${path.basename(rootDir)}\n`;
-  result += `Generated: ${new Date().toISOString()}\n\n`;
+  let result = `# Code Repository Snapshot: ${path.basename(rootDir)}\n\n`;
+  result += `--------------------------------------------\n`;
+  result += `Generated with reposnap v${version}\n`;
+  result += `Project: ${homepage}\n`;
+  result += `Author: ${author}\n`;
+  result += `Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}\n`;
+  result += `--------------------------------------------\n\n\n`;
 
   const visitedPaths = new Set<string>(); // Track visited paths to prevent recursion
   const maxSizeBytes = (options.maxFileSizeKB || 500) * 1024;
